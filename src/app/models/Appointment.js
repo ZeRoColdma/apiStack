@@ -1,7 +1,5 @@
 import Sequelize, { Model } from "sequelize";
 
-import User from "../models/User";
-
 class Appointment extends Model {
   static init(sequelize) {
     super.init(
