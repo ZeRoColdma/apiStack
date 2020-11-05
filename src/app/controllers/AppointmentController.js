@@ -6,7 +6,9 @@ import Notification from "../schemas/Notification";
 
 import { startOfHour, parseISO, isBefore, format, subHours } from "date-fns";
 import pt from "date-fns/locale/pt";
-import Mail from "../../lib/Mail";
+
+import CancellationMain from "../jobs/CancellationMail";
+import Queue from "../../lib/Queue";
 
 class AppointmentController {
   async index(request, response) {
@@ -102,6 +104,11 @@ class AppointmentController {
           as: "provider",
           attributes: ["name", "email"],
         },
+        {
+          model: User,
+          as: "user",
+          attributes: ["name"],
+        },
       ],
     });
 
@@ -122,10 +129,8 @@ class AppointmentController {
     appointment.canceled_ad = new Date();
     await appointment.save();
 
-    await Mail.sendMail({
-      to: `${appointment.provider.name} <${appointment.provider.email}>`,
-      subject: "Agendamento Cancelado",
-      text: "Voce tem um novo cancelamento",
+    await Queue.add(CancellationMain.key, {
+      appointment,
     });
 
     return response.json(appointment);
